@@ -19,7 +19,8 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 
 import { hours } from "../extras/DayHelper";
-import { weatherByCity } from "../services/DayServices";
+import DayServices from "../services/DayServices";
+import axios from "axios";
 
 function rand() {
   return Math.round(Math.random() * 20) - 10;
@@ -252,19 +253,21 @@ function CreateReminder(props) {
 function Day() {
   const [day, setDay] = useState("");
   const [time, setTime] = useState("");
-  const [weather, setWeather] = useState("");
+  const [weather, setWeather] = useState();
 
   const { id } = useParams();
 
-  // useEffect(() => {
-  //   setWeather(weatherByCity);
-  // }, weather);
+  useEffect(async () => {
+    const data = await DayServices.getWeatherByCity();
+    console.log(data);
+  }, []);
 
   const classes = useStyles();
   const rows = loadData();
 
   return (
     <div className={classes.root}>
+      <p>{JSON.stringify(weather)}</p>
       <Grid container spacing={3}>
         <Grid item xs>
           <h3>Day: {id}</h3>
