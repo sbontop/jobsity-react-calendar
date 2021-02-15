@@ -12,11 +12,13 @@ import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import Grid from "@material-ui/core/Grid";
 import FormControl from "@material-ui/core/FormControl";
+import FormHelperText from "@material-ui/core/FormHelperText";
 import Modal from "@material-ui/core/Modal";
 import TextField from "@material-ui/core/TextField";
+import Select from "@material-ui/core/Select";
+import MenuItem from "@material-ui/core/MenuItem";
 
 import { hours } from "../extras/DayHelper";
-import { simpleModal } from "./CreateReminder";
 
 function rand() {
   return Math.round(Math.random() * 20) - 10;
@@ -60,6 +62,13 @@ const useStyles = makeStyles(theme => ({
     "& > *": {
       margin: theme.spacing(1),
       width: "25ch"
+    },
+    formControl: {
+      margin: theme.spacing(1),
+      minWidth: 120
+    },
+    selectEmpty: {
+      marginTop: theme.spacing(2)
     }
   }
 }));
@@ -77,14 +86,18 @@ const loadData = () => {
   return rows;
 };
 
-function SimpleModal(props) {
+function CreateReminder(props) {
   const classes = useStyles();
   // getModalStyle is not a pure function, we roll the style only on the first render
-  const [modalStyle] = React.useState(getModalStyle);
-  const [open, setOpen] = React.useState(false);
-  const [day, setDay] = React.useState(props.day);
-  const [time, setTime] = React.useState(props.time);
-  const [reminderDescription, setReminderDescription] = React.useState("");
+  const [modalStyle] = useState(getModalStyle);
+  const [open, setOpen] = useState(false);
+  const [day, setDay] = useState(props.day);
+  const [time, setTime] = useState(props.time);
+  const [reminderDescription, setReminderDescription] = useState("");
+  const [city, setCity] = useState("Guayaquil");
+  const [color, setColor] = useState("#ff0000");
+
+  const MAX_LENGTH_CHARACTER = 30;
 
   const handleOpen = () => {
     setOpen(true);
@@ -96,17 +109,19 @@ function SimpleModal(props) {
 
   const createReminder = () => {
     console.log("reminderDescription", reminderDescription);
-    const reminderObj = {
-      description: reminderDescription
+    const reminderObjToSave = {
+      description: reminderDescription,
+      city: city,
+      color: color
     };
-    localStorage.setItem(`${day}-${time}`, JSON.stringify(reminderObj));
+    localStorage.setItem(`${day}-${time}`, JSON.stringify(reminderObjToSave));
 
     /** CONFIRMAR GUARDADO CORRECTO */
     const reminderObjSaved = JSON.parse(localStorage.getItem(`${day}-${time}`));
     alert(
-      `Reminder saved with day ${day} time ${time} and description ${
+      `Reminder saved with day ${day} time ${time} description ${
         reminderObjSaved.description
-      }`
+      } city ${city} color ${color}`
     );
     handleClose();
     location.reload();
@@ -116,51 +131,102 @@ function SimpleModal(props) {
     setReminderDescription(e.target.value);
   };
 
+  const onChangeCity = e => {
+    setCity(e.target.value);
+  };
+
+  const onChangeColor = e => {
+    setColor(e.target.value);
+  };
+
   const body = (
     <div style={modalStyle} className={classes.modal}>
       <Grid container>
-        <h2 id="simple-modal-title">Create Reminder</h2>
+        <h2 id="simple-modal-title">
+          {localStorage.getItem(`${day}-${time}`)
+            ? "Edit Reminder"
+            : "Create Reminder"}
+        </h2>
       </Grid>
       <Grid id="simple-modal-description" container spacing={3}>
         <form className={classes.form} noValidate autoComplete="off">
-          <Grid item xs>
+          <FormControl>
             <TextField
               id="outlined-basic"
               label="Date"
               variant="outlined"
               value={day}
+              InputProps={{
+                readOnly: true
+              }}
             />
-          </Grid>
+          </FormControl>
 
-          <Grid item xs>
+          <FormControl>
             <TextField
               id="outlined-basic"
               label="Time"
               variant="outlined"
               value={time}
+              InputProps={{
+                readOnly: true
+              }}
             />
-          </Grid>
+          </FormControl>
 
-          <Grid item xs>
+          <FormControl>
             <TextField
               id="outlined-basic"
               label="Description"
               variant="outlined"
               value={reminderDescription}
               onChange={e => onChangeReminder(e)}
+              required
+              inputProps={{
+                maxLength: MAX_LENGTH_CHARACTER
+              }}
+              helperText={`${
+                reminderDescription.length
+              }/${MAX_LENGTH_CHARACTER}`}
             />
-          </Grid>
-        </form>
-      </Grid>
+          </FormControl>
 
-      <Grid container spacing={3}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => createReminder()}
-        >
-          Create
-        </Button>
+          <FormControl>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              label="Country"
+              value={city}
+              onChange={onChangeCity}
+            >
+              <MenuItem value="Guayaquil">Guayaquil</MenuItem>
+              <MenuItem value="Quito">Quito</MenuItem>
+              <MenuItem value="Cuenca">Cuenca</MenuItem>
+            </Select>
+            <FormHelperText>Select a city</FormHelperText>
+          </FormControl>
+
+          <FormControl>
+            <label htmlFor="favcolor">Select your favorite color:</label>
+            <input
+              type="color"
+              id="favcolor"
+              name="favcolor"
+              value="#ff0000"
+              onChange={e => onChangeColor(e)}
+            />
+          </FormControl>
+
+          <FormControl>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => createReminder()}
+            >
+              {localStorage.getItem(`${day}-${time}`) ? "Edit" : "Create"}
+            </Button>
+          </FormControl>
+        </form>
       </Grid>
     </div>
   );
@@ -168,7 +234,7 @@ function SimpleModal(props) {
   return (
     <div>
       <Button variant="contained" color="primary" onClick={handleOpen}>
-        New
+        {localStorage.getItem(`${day}-${time}`) ? "Edit" : "Create"}
       </Button>
       <Modal
         open={open}
@@ -195,13 +261,10 @@ function Day() {
     <div className={classes.root}>
       <Grid container spacing={3}>
         <Grid item xs>
-          <h3>ID: {id}</h3>
+          <h3>Day: {id}</h3>
           <Link to="/">
             <span>Go back to calendar!</span>
           </Link>
-        </Grid>
-        <Grid item xs>
-          <SimpleModal />
         </Grid>
       </Grid>
 
@@ -215,21 +278,35 @@ function Day() {
             <TableRow>
               <TableCell>Hour</TableCell>
               <TableCell align="left">Description</TableCell>
+              <TableCell align="left">City</TableCell>
               <TableCell align="center">Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {rows.map(row => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={`${id}-${row.hour}`}
+                style={{
+                  backgroundColor: localStorage.getItem(`${id}-${row.hour}`)
+                    ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`))
+                        .color
+                    : ""
+                }}
+              >
                 <TableCell>{row.hour}</TableCell>
                 <TableCell>
                   {localStorage.getItem(`${id}-${row.hour}`)
                     ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`))
                         .description
-                    : row.description}
+                    : "No data"}
                 </TableCell>
                 <TableCell>
-                  <SimpleModal day={id} time={row.hour} />
+                  {localStorage.getItem(`${id}-${row.hour}`)
+                    ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`)).city
+                    : "No data"}
+                </TableCell>
+                <TableCell>
+                  <CreateReminder day={id} time={row.hour} />
                 </TableCell>
               </TableRow>
             ))}
