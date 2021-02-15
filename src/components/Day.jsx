@@ -94,12 +94,25 @@ function SimpleModal(props) {
     setOpen(false);
   };
 
-  const handleSubmit = () => {
+  const createReminder = () => {
     console.log("reminderDescription", reminderDescription);
+    const reminderObj = {
+      description: reminderDescription
+    };
+    localStorage.setItem(`${day}-${time}`, JSON.stringify(reminderObj));
+
+    /** CONFIRMAR GUARDADO CORRECTO */
+    const reminderObjSaved = JSON.parse(localStorage.getItem(`${day}-${time}`));
+    alert(
+      `Reminder saved with day ${day} time ${time} and description ${
+        reminderObjSaved.description
+      }`
+    );
+    handleClose();
+    location.reload();
   };
 
   const onChangeReminder = e => {
-    // console.log(e.target.value);
     setReminderDescription(e.target.value);
   };
 
@@ -144,7 +157,7 @@ function SimpleModal(props) {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => handleSubmit()}
+          onClick={() => createReminder()}
         >
           Create
         </Button>
@@ -170,9 +183,11 @@ function SimpleModal(props) {
 }
 
 function Day() {
-  // We can use the `useParams` hook here to access
-  // the dynamic pieces of the URL.
-  let { id } = useParams();
+  const [day, setDay] = useState("");
+  const [time, setTime] = useState("");
+
+  const { id } = useParams();
+
   const classes = useStyles();
   const rows = loadData();
 
@@ -207,9 +222,14 @@ function Day() {
             {rows.map(row => (
               <TableRow key={row.id}>
                 <TableCell>{row.hour}</TableCell>
-                <TableCell>{row.description}</TableCell>
                 <TableCell>
-                  <SimpleModal day="2020-02-15" time="12:00" />
+                  {localStorage.getItem(`${id}-${row.hour}`)
+                    ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`))
+                        .description
+                    : row.description}
+                </TableCell>
+                <TableCell>
+                  <SimpleModal day={id} time={row.hour} />
                 </TableCell>
               </TableRow>
             ))}

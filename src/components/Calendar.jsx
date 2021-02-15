@@ -30,14 +30,14 @@ class Calendar extends React.Component {
       <div className="header row flex-middle">
         <div className="col col-start">
           <div className="icon" onClick={this.prevMonth}>
-            chevron_left
+            Back
           </div>
         </div>
         <div className="col col-center">
           <span>{format(this.state.currentMonth, dateFormat)}</span>
         </div>
         <div className="col col-end" onClick={this.nextMonth}>
-          <div className="icon">chevron_right</div>
+          <div className="icon">Next</div>
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ class Calendar extends React.Component {
             key={day}
             onClick={() => this.onDateClick(toDate(cloneDay))}
           >
-            <Link to={`/day/${toDate(cloneDay)}`}>
+            <Link to={`/day/${format(cloneDay, "dd MMMM yyyy")}`}>
               <span className="number">{formattedDate}</span>
               <span className="bg">{formattedDate}</span>
             </Link>
@@ -131,9 +131,6 @@ class Calendar extends React.Component {
   };
 
   render() {
-    // console.log(format(new Date(), "'Today is a' eeee"));
-    // let result = toDate(new Date());
-    // console.log(result);
     return (
       <div className="calendar">
         {this.renderHeader()}
