@@ -170,9 +170,11 @@ function SimpleModal(props) {
 }
 
 function Day() {
-  // We can use the `useParams` hook here to access
-  // the dynamic pieces of the URL.
-  let { id } = useParams();
+  const [day, setDay] = useState("");
+  const [time, setTime] = useState("");
+
+  const { id } = useParams();
+
   const classes = useStyles();
   const rows = loadData();
 
@@ -209,7 +211,7 @@ function Day() {
                 <TableCell>{row.hour}</TableCell>
                 <TableCell>{row.description}</TableCell>
                 <TableCell>
-                  <SimpleModal day="2020-02-15" time="12:00" />
+                  <SimpleModal day={id} time={row.hour} />
                 </TableCell>
               </TableRow>
             ))}
