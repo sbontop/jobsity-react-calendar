@@ -18,11 +18,12 @@ import TextField from "@material-ui/core/TextField";
 import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 
+
 import { hours } from "../extras/DayHelper";
 
 function getModalStyle() {
-  const top = 50 
-  const left = 50 
+  const top = 50
+  const left = 50
 
   return {
     top: `${top}%`,
@@ -30,6 +31,8 @@ function getModalStyle() {
     transform: `translate(-${top}%, -${left}%)`
   };
 }
+
+
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -81,6 +84,7 @@ function ModalCreateReminder(props) {
 
   const [modalStyle] = useState(getModalStyle);
   const [openModal, setOpenModal] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   const [day, setDay] = useState(props.day);
   const [time, setTime] = useState(props.time);
@@ -91,6 +95,67 @@ function ModalCreateReminder(props) {
   // max length for reminder description field
   const MAX_LENGTH_CHARACTER = 30;
 
+  //Unit Testing: validate Reminder fields already saved
+  const validateReminderSaved = () => {
+    let isValidDataField = true;
+    if (localStorage.getItem(`${day}-${time}`)) {
+      const reminderSaved = JSON.parse(localStorage.getItem(`${day}-${time}`));
+
+      // validate day field
+      if (day.length == 10 && day.split('-')[0].length == 4 && day.split('-')[1].length == 2 && day.split('-')[2].length == 2) {
+        console.log("Test Case 1: Ok");
+        isValidDataField = isValidDataField && true
+      } else {
+        console.log("Test Case 1: Failed")
+        isValidDataField = isValidDataField && false
+      }
+      // validate time field
+      if (time.length <= 8 && time.split(':')[0].length <= 2 && time.split(':')[1].length == 5) {
+        console.log("Test Case 2: Ok")
+        isValidDataField = isValidDataField && true
+      } else {
+        console.log("Test Case 2: Failed")
+        isValidDataField = isValidDataField && false
+      }
+      // validate description field
+      if (reminderSaved.description && typeof (reminderSaved.description) == 'string' && reminderSaved.description.length <= 30) {
+        console.log("Test Case 3: Ok")
+        isValidDataField = isValidDataField && true
+      } else {
+        console.log("Test Case 3: Failed")
+        isValidDataField = isValidDataField && false
+      }
+      // validate city field
+      if (reminderSaved.city && typeof (reminderSaved.description) == 'string') {
+        console.log("Test Case 4: Ok")
+        isValidDataField = isValidDataField && true
+      } else {
+        console.log("Test Case 4: Failed")
+        isValidDataField = isValidDataField && false
+      }
+      // validate color field
+      if (reminderSaved.color && typeof (reminderSaved.color) == 'string' && reminderSaved.color.length == 7) {
+        console.log("Test Case 5: Ok")
+        isValidDataField = isValidDataField && true
+      } else {
+        console.log("Test Case 5: Failed")
+        isValidDataField = isValidDataField && false
+      }
+      // validate weather field
+      if (reminderSaved.weather && typeof (reminderSaved.weather) == 'string') {
+        console.log("Test Case 6: Ok")
+        isValidDataField = isValidDataField && true
+      } else {
+        console.log("Test Case 6: Failed")
+        isValidDataField = isValidDataField && false
+      }
+
+      // Summarize
+      console.log(isValidDataField ? "Unit Testing for Reminder Creation OK" : "Unit Testing for Reminder Creation Failed")
+    }
+  }
+
+  //API Call
   const getWeatherByCity = (str_city) => {
     fetch(`https://5616dab3-55ed-4549-a791-78913e0a09e0.mock.pstmn.io/api/weather/${str_city}/2021-02-15`)
       .then(res => res.json())
@@ -100,6 +165,7 @@ function ModalCreateReminder(props) {
       })
   }
 
+  //Modal Functions
   const handleOpenModal = () => {
     setOpenModal(true);
   };
@@ -122,11 +188,12 @@ function ModalCreateReminder(props) {
 
     // confirm reminder object saved
     const reminderObjSaved = JSON.parse(localStorage.getItem(`${day}-${time}`));
+
     alert(
       `Reminder saved with day ${day} time ${time} description ${reminderObjSaved.description
       } city ${city} color ${color} weather ${cityWeather}`
     );
-    handleCloseModal();
+    validateReminderSaved();
     location.reload();
   };
 
@@ -145,6 +212,11 @@ function ModalCreateReminder(props) {
   const onChangeColor = e => {
     setColor(e.target.value);
   };
+
+  const removeReminder = () => {
+    localStorage.removeItem(`${day}-${time}`);
+    location.reload();
+  }  
 
   const body = (
     <div style={modalStyle} className={classes.modal}>
@@ -215,7 +287,7 @@ function ModalCreateReminder(props) {
               <MenuItem value="Lima">Lima</MenuItem>
               <MenuItem value="Caracas">Caracas</MenuItem>
               <MenuItem value="Asuncion">Asuncion</MenuItem>
-              <MenuItem value="Montevideo">Montevideo</MenuItem>            
+              <MenuItem value="Montevideo">Montevideo</MenuItem>
             </Select>
             <FormHelperText>Select a city</FormHelperText>
           </FormControl>
@@ -229,10 +301,6 @@ function ModalCreateReminder(props) {
               value="#ff0000"
               onChange={e => onChangeColor(e)}
             />
-          </FormControl>
-
-          <FormControl>
-
           </FormControl>
 
         </form>
@@ -260,6 +328,7 @@ function ModalCreateReminder(props) {
 
       </Grid>
     </div>
+
   );
 
   return (
@@ -267,6 +336,10 @@ function ModalCreateReminder(props) {
       <Button variant="contained" color="primary" onClick={handleOpenModal}>
         {localStorage.getItem(`${day}-${time}`) ? "Edit" : "Create"}
       </Button>
+      {localStorage.getItem(`${day}-${time}`) &&
+        <Button variant="contained" color="inherit" onClick={removeReminder}>Remove</Button>
+      }
+
       <Modal
         open={openModal}
         onClose={handleCloseModal}
@@ -288,15 +361,30 @@ function Day() {
   const classes = useStyles();
   const rows = loadData();
 
+  const removeAllReminders = () => {
+    localStorage.clear();
+    location.reload();
+  }
+
   return (
     <div className={classes.root}>
       <Grid container spacing={3}>
+
         <Grid item xs>
           <h3>Day: {id}</h3>
           <Link to="/">
             <span>Go back to calendar!</span>
           </Link>
         </Grid>
+
+      </Grid>
+
+      <Grid container spacing={3}>
+      <Grid item xs>
+      <Button variant="contained" color="secondary" onClick={removeAllReminders}>Remove All</Button>
+      </Grid>
+      
+
       </Grid>
 
       <TableContainer component={Paper}>
