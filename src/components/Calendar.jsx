@@ -16,6 +16,8 @@ import {
 } from "date-fns";
 
 import { Link } from "react-router-dom";
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 
 class Calendar extends React.Component {
   state = {
@@ -30,14 +32,16 @@ class Calendar extends React.Component {
       <div className="header row flex-middle">
         <div className="col col-start">
           <div className="icon" onClick={this.prevMonth}>
-            Back
+            <ArrowBackIcon />
           </div>
         </div>
         <div className="col col-center">
           <span>{format(this.state.currentMonth, dateFormat)}</span>
         </div>
         <div className="col col-end" onClick={this.nextMonth}>
-          <div className="icon">Next</div>
+          <div className="icon">
+            <ArrowForwardIcon />
+          </div>
         </div>
       </div>
     );
@@ -92,7 +96,7 @@ class Calendar extends React.Component {
             key={day}
             onClick={() => this.onDateClick(toDate(cloneDay))}
           >
-            <Link to={`/day/${format(cloneDay, "dd MMMM yyyy")}`}>
+            <Link to={`/day/${format(cloneDay, "yyyy-MM-dd")}`}>
               <span className="number">{formattedDate}</span>
               <span className="bg">{formattedDate}</span>
             </Link>

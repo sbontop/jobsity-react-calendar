@@ -19,16 +19,10 @@ import Select from "@material-ui/core/Select";
 import MenuItem from "@material-ui/core/MenuItem";
 
 import { hours } from "../extras/DayHelper";
-import DayServices from "../services/DayServices";
-import axios from "axios";
-
-function rand() {
-  return Math.round(Math.random() * 20) - 10;
-}
 
 function getModalStyle() {
-  const top = 50 + rand();
-  const left = 50 + rand();
+  const top = 50 
+  const left = 50 
 
   return {
     top: `${top}%`,
@@ -40,12 +34,6 @@ function getModalStyle() {
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1
-  },
-  paper: {
-    /**GRID STYLE */
-    padding: theme.spacing(2),
-    textAlign: "center",
-    color: theme.palette.text.secondary
   },
   table: {
     minWidth: 300
@@ -88,44 +76,57 @@ const loadData = () => {
   return rows;
 };
 
-function CreateReminder(props) {
+function ModalCreateReminder(props) {
   const classes = useStyles();
-  // getModalStyle is not a pure function, we roll the style only on the first render
+
   const [modalStyle] = useState(getModalStyle);
-  const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+
   const [day, setDay] = useState(props.day);
   const [time, setTime] = useState(props.time);
-  const [reminderDescription, setReminderDescription] = useState("");
-  const [city, setCity] = useState("Guayaquil");
-  const [color, setColor] = useState("#ff0000");
-
+  const [reminderDescription, setReminderDescription] = useState(localStorage.getItem(`${day}-${time}`) ? JSON.parse(localStorage.getItem(`${day}-${time}`)).description : "");
+  const [city, setCity] = useState(localStorage.getItem(`${day}-${time}`) ? JSON.parse(localStorage.getItem(`${day}-${time}`)).city : "");
+  const [color, setColor] = useState(localStorage.getItem(`${day}-${time}`) ? JSON.parse(localStorage.getItem(`${day}-${time}`)).color : "#ff0000");
+  const [cityWeather, setCityWeather] = useState(localStorage.getItem(`${day}-${time}`) ? JSON.parse(localStorage.getItem(`${day}-${time}`)).weather : "");
+  // max length for reminder description field
   const MAX_LENGTH_CHARACTER = 30;
 
-  const handleOpen = () => {
-    setOpen(true);
+  const getWeatherByCity = (str_city) => {
+    fetch(`https://5616dab3-55ed-4549-a791-78913e0a09e0.mock.pstmn.io/api/weather/${str_city}/2021-02-15`)
+      .then(res => res.json())
+      .then(res => {
+        console.log(res.weather)
+        setCityWeather(res.weather)
+      })
+  }
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
   };
 
-  const handleClose = () => {
-    setOpen(false);
+  const handleCloseModal = () => {
+    setOpenModal(false);
   };
 
   const createReminder = () => {
-    console.log("reminderDescription", reminderDescription);
+    // Create reminder object to save in local storage
     const reminderObjToSave = {
       description: reminderDescription,
       city: city,
-      color: color
+      color: color,
+      weather: cityWeather,
     };
+    console.log(reminderObjToSave)
+
     localStorage.setItem(`${day}-${time}`, JSON.stringify(reminderObjToSave));
 
-    /** CONFIRMAR GUARDADO CORRECTO */
+    // confirm reminder object saved
     const reminderObjSaved = JSON.parse(localStorage.getItem(`${day}-${time}`));
     alert(
-      `Reminder saved with day ${day} time ${time} description ${
-        reminderObjSaved.description
-      } city ${city} color ${color}`
+      `Reminder saved with day ${day} time ${time} description ${reminderObjSaved.description
+      } city ${city} color ${color} weather ${cityWeather}`
     );
-    handleClose();
+    handleCloseModal();
     location.reload();
   };
 
@@ -133,8 +134,12 @@ function CreateReminder(props) {
     setReminderDescription(e.target.value);
   };
 
-  const onChangeCity = e => {
+  function onChangeCity(e) {
+    /*console.log(e.target.value)*/
     setCity(e.target.value);
+
+    // get weather by city
+    getWeatherByCity(e.target.value);
   };
 
   const onChangeColor = e => {
@@ -150,7 +155,8 @@ function CreateReminder(props) {
             : "Create Reminder"}
         </h2>
       </Grid>
-      <Grid id="simple-modal-description" container spacing={3}>
+
+      <Grid id="simple-modal-description" container >
         <form className={classes.form} noValidate autoComplete="off">
           <FormControl>
             <TextField
@@ -187,9 +193,8 @@ function CreateReminder(props) {
               inputProps={{
                 maxLength: MAX_LENGTH_CHARACTER
               }}
-              helperText={`${
-                reminderDescription.length
-              }/${MAX_LENGTH_CHARACTER}`}
+              helperText={`${reminderDescription.length
+                }/${MAX_LENGTH_CHARACTER}`}
             />
           </FormControl>
 
@@ -199,11 +204,18 @@ function CreateReminder(props) {
               id="demo-simple-select"
               label="Country"
               value={city}
-              onChange={onChangeCity}
+              onChange={e => onChangeCity(e)}
             >
-              <MenuItem value="Guayaquil">Guayaquil</MenuItem>
+              <MenuItem value="Monterrey">Monterrey</MenuItem>
+              <MenuItem value="Brasilia">Brasilia</MenuItem>
+              <MenuItem value="Bogota">Bogota</MenuItem>
               <MenuItem value="Quito">Quito</MenuItem>
-              <MenuItem value="Cuenca">Cuenca</MenuItem>
+              <MenuItem value="Santiago">Santiago</MenuItem>
+              <MenuItem value="Cordova">Cordova</MenuItem>
+              <MenuItem value="Lima">Lima</MenuItem>
+              <MenuItem value="Caracas">Caracas</MenuItem>
+              <MenuItem value="Asuncion">Asuncion</MenuItem>
+              <MenuItem value="Montevideo">Montevideo</MenuItem>            
             </Select>
             <FormHelperText>Select a city</FormHelperText>
           </FormControl>
@@ -220,6 +232,12 @@ function CreateReminder(props) {
           </FormControl>
 
           <FormControl>
+
+          </FormControl>
+
+        </form>
+        <Grid container >
+          <Grid item xs={6}>
             <Button
               variant="contained"
               color="primary"
@@ -227,20 +245,31 @@ function CreateReminder(props) {
             >
               {localStorage.getItem(`${day}-${time}`) ? "Edit" : "Create"}
             </Button>
-          </FormControl>
-        </form>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => handleCloseModal()}
+            >
+              Cancel
+            </Button>
+          </Grid>
+        </Grid>
+
       </Grid>
     </div>
   );
 
   return (
     <div>
-      <Button variant="contained" color="primary" onClick={handleOpen}>
+      <Button variant="contained" color="primary" onClick={handleOpenModal}>
         {localStorage.getItem(`${day}-${time}`) ? "Edit" : "Create"}
       </Button>
       <Modal
-        open={open}
-        onClose={handleClose}
+        open={openModal}
+        onClose={handleCloseModal}
         aria-labelledby="simple-modal-title"
         aria-describedby="simple-modal-description"
       >
@@ -253,25 +282,17 @@ function CreateReminder(props) {
 function Day() {
   const [day, setDay] = useState("");
   const [time, setTime] = useState("");
-  const [weather, setWeather] = useState();
 
   const { id } = useParams();
-
-  useEffect(async () => {
-    const data = await DayServices.getWeatherByCity();
-    console.log(data);
-  }, []);
 
   const classes = useStyles();
   const rows = loadData();
 
   return (
     <div className={classes.root}>
-      <p>{JSON.stringify(weather)}</p>
       <Grid container spacing={3}>
         <Grid item xs>
           <h3>Day: {id}</h3>
-          <h3>Weather: {}</h3>
           <Link to="/">
             <span>Go back to calendar!</span>
           </Link>
@@ -289,6 +310,7 @@ function Day() {
               <TableCell>Hour</TableCell>
               <TableCell align="left">Description</TableCell>
               <TableCell align="left">City</TableCell>
+              <TableCell align="left">Weather</TableCell>
               <TableCell align="center">Action</TableCell>
             </TableRow>
           </TableHead>
@@ -299,7 +321,7 @@ function Day() {
                 style={{
                   backgroundColor: localStorage.getItem(`${id}-${row.hour}`)
                     ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`))
-                        .color
+                      .color
                     : ""
                 }}
               >
@@ -307,7 +329,7 @@ function Day() {
                 <TableCell>
                   {localStorage.getItem(`${id}-${row.hour}`)
                     ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`))
-                        .description
+                      .description
                     : "No data"}
                 </TableCell>
                 <TableCell>
@@ -316,7 +338,12 @@ function Day() {
                     : "No data"}
                 </TableCell>
                 <TableCell>
-                  <CreateReminder day={id} time={row.hour} />
+                  {localStorage.getItem(`${id}-${row.hour}`)
+                    ? JSON.parse(localStorage.getItem(`${id}-${row.hour}`)).weather
+                    : "No data"}
+                </TableCell>
+                <TableCell>
+                  <ModalCreateReminder day={id} time={row.hour} />
                 </TableCell>
               </TableRow>
             ))}
