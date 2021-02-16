@@ -20,6 +20,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 
 
 import { hours } from "../extras/DayHelper";
+import { ArrowBack } from "@material-ui/icons";
 
 function getModalStyle() {
   const top = 50
@@ -368,12 +369,11 @@ function Day() {
 
   return (
     <div className={classes.root}>
-      <Grid container spacing={3}>
-
+      <Grid container spacing={3}>        
         <Grid item xs>
-          <h3>Day: {id}</h3>
+        <h1>Welcome to The Reminders of the Day {id}</h1>
           <Link to="/">
-            <span>Go back to calendar!</span>
+            <ArrowBack /><span>Go back to calendar!</span>
           </Link>
         </Grid>
 
