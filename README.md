@@ -30,3 +30,7 @@ Please consider the following requirements should be already installed:
 4. npm start
 
 That should be enough for executing the project in development mode
+
+### Unit Test: Create Reminder 
+Every time a reminder is created or updated, please look for test cases messages in the console 
+that show if the reminder has been created correctly or not.
